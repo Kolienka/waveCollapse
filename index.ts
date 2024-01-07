@@ -8,6 +8,34 @@ const LEFT : number = 2;
 const RIGHT : number = 3;
 const DOWN : number = 4;
 
+const RULES_MAP = {
+    BLANK : {
+        UP :    [BLANK, UP],
+        LEFT :  [BLANK, RIGHT],
+        DOWN :  [BLANK, DOWN],
+        RIGHT : [BLANK, LEFT]
+    },
+    LEFT : {
+        UP :    [LEFT, DOWN, RIGHT],
+        LEFT :  [UP, DOWN, RIGHT],
+        DOWN :  [UP, LEFT, RIGHT],
+        RIGHT : [BLANK, RIGHT]
+    },
+    DOWN : {
+        UP :    [BLANK, UP],
+        LEFT :  [DOWN, RIGHT, UP],
+        DOWN :  [LEFT, RIGHT, UP],
+        RIGHT : [BLANK, RIGHT]    
+    },
+    RIGHT : {
+        UP :    [DOWN, LEFT, RIGHT],
+        LEFT :  [BLANK, LEFT],
+        DOWN :  [DOWN, LEFT, RIGHT],
+        RIGHT : [DOWN, LEFT, UP]
+    },
+}
+
+
 let imagesInfos: Tile[] = [];
 let canvas : HTMLCanvasElement;
 let ctx : CanvasRenderingContext2D;
@@ -47,8 +75,11 @@ function loadImage(img: Tile, x: number, y: number, width: number, height: numbe
 }
 
 function getMinRandomEntropy(){
+    const entropies = grid.flat()
+        .map(tile => tile.options.length)
+        .filter(val => val != 1);
+    const minEntropy = Math.min(...entropies);
     let res = [];
-    let minEntropy = Math.min(...grid.flat().map(tile => tile.options.length));
     for(let i=0; i < grid.length; i++){
         for(let j=0; j < grid[i].length; j++){
             if(grid[i][j].options.length == minEntropy){
@@ -79,20 +110,24 @@ function draw(){
     }
 }
 
-function collapse(i: number, j: number){
-    const cell = grid[i][j];
+function collapseCell(cell: {colapsed: boolean, options: number[]}){
     const selectedOption = cell.options[Math.floor(Math.random() * cell.options.length)];
     cell.options = [selectedOption];
     cell.colapsed = true;
-
 }
 
 function main() {
     console.log("Main");
     setup();
-    let [i,j] = getMinRandomEntropy();
-    collapse(i,j);
-    draw();
+    let collapsed_count = 0;
+    while(collapsed_count < DIM*DIM){
+        const cell_coordinates = getMinRandomEntropy();
+        const cell = grid[cell_coordinates[0]][cell_coordinates[1]];
+        collapseCell(cell);
+        collapsed_count++;
+        draw();
+    }
+    console.log("end of main");
 }
 
 
